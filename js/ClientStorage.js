@@ -2,7 +2,7 @@
 
 LDR.STORAGE = function(onReady) {
     let self = this;
-    this.req = indexedDB.open("ldraw", 9);
+    this.req = indexedDB.open("ldraw", 10);
 
     this.req.onupgradeneeded = function(event) {
 	const db = event.target.result;
@@ -32,9 +32,12 @@ LDR.STORAGE = function(onReady) {
 	}
 	if(event.oldVersion < 9) {
             // Added assembies to list of parts used in instructions. This fixes bug where storage is used to load model when at a sub model, thus causing double rendering due to asynchroneous fetching from indexedDB... that took 4 days to debug.
-	    var pStore = this.transaction.objectStore("parts");
+	}
+	if(event.oldVersion < 9) {
+            // Added PREVIEW command
+	    let pStore = this.transaction.objectStore("parts");
 	    pStore.clear();
-	    var iStore = this.transaction.objectStore("instructions");
+	    let iStore = this.transaction.objectStore("instructions");
 	    iStore.clear();
 	}
     };
@@ -195,7 +198,7 @@ LDR.STORAGE.prototype.savePartsToStorage = function(parts, loader) {
     let transaction = this.db.transaction(["parts"], "readwrite");
     
     transaction.oncomplete = function(event) {
-        //console.log('Number of parts saved in indexedDB: ' + partsWritten);
+        //console.log(partsWritten, 'of', parts.length, 'parts saved in indexedDB');
     };
     transaction.onerror = function(event) {
         console.warn('Error while writing parts!');

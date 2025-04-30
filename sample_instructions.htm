@@ -7,7 +7,7 @@
     <link href="css/preview.css" rel="stylesheet" type="text/css" />
     <link href="css/buttons.css" rel="stylesheet" type="text/css" />
     <link href="css/options.css" rel="stylesheet" type="text/css" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
   </head>
   <body onLoad="main()">
     <script src="js/jquery.min.js"></script>
@@ -137,8 +137,6 @@
     <div id="options" /></div>
     <script>
       var model = 'models/corvette_full.mpd';
-      //var model = 'models/test_purging.mpd';
-      //var model = 'models/spiral.ldr';
 
       const baseURL = 'sample_instructions.htm?step='; // Change this line so it fits the page that renders instructions for you (probably not 'sample_instructions.htm')
       var manager;
@@ -149,7 +147,7 @@
               buildAssemblies: true, // Assemble parts, such as minifig torsos and legs
               key: model,
               adPeek: 0, // Show a bar below to contain editor options - set to roughly 120 if canEdit is set to true
-              setUpOptions: true, // Show button options below.
+              setUpOptions: true, // Show options below and gears in top.
               showNumberOfSteps: true,
               pliMaxWidthPercentage: 30, // The maximum width of the PLI box in percentage of the screen width when the PLI box is shown on the left side.
               pliMaxHeightPercentage: 30, // The maximum height of the PLI box in percentage of the screen height when the PLI box is shown on top.

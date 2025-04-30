@@ -71,7 +71,8 @@
 
     <script>
       //var modelUrl = 'models/test_assembly2.mpd';
-      var modelUrl = 'models/tnl.mpd';
+      //var modelUrl = 'models/tnl.mpd';
+      var modelUrl = 'models/test_assemblies.ldr';
       var builder = null;
       var ldrLoader;
 
@@ -356,7 +357,13 @@
 	    var b = pc.getBounds();
 	    var elementCenter = new THREE.Vector3();
 	    b.getCenter(elementCenter);
-	    baseObject.position.sub(elementCenter);
+            baseObject.position.sub(elementCenter);
+            // Perform rotation from !PREVIEW:
+            if(pt.preview) {
+	      let m4 = new THREE.Matrix4();
+	      m4.setFromMatrix3(pt.preview.r);
+	      baseObject.applyMatrix4(m4);
+	    }
      	    baseObject.updateMatrixWorld(true);
 
 	    //baseObject.add(new THREE.Box3Helper(b, 0xff0000));

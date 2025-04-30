@@ -96,7 +96,7 @@ LDR.PliPreviewer.prototype.setPart = function(pt, c) {
 
     this.pliHighlighted = pt;
     this.scene.add(pt.mesh);
-        
+
     pt.pliMC.overwriteColor(c);
 
     let b = pt.pliMC.boundingBox;

@@ -1,5 +1,8 @@
 0 Test that assemblies are correctly identified and put together.
 0 Name: test_assemblies.ldr
+1 4 0 0 0 1 0 0 0 1 0 0 0 1 11203p01.dat
+1 2 0 30 0 1 0 0 0 1 0 0 0 1 3001.dat
+0 STEP
 1 0 0 0 0 1 0 0 0 1 0 0 0 1 2429.dat
 1 0 0 0 0 1 0 0 0 1 0 0 0 1 2430.dat
 0

@@ -377,6 +377,9 @@
 	LDR.Colors.DEFAULT_POLYGON_OFFSET_UNITS = 1;
         mainModel.generateThreePart(ldrLoader, 16, origo, inv, true, false, mc); // Trans color to ensure tansparency is set in the material.
 
+	if(color === 16 && mainModel.preview) {
+	    color = mainModel.preview.c;
+	}
 	mc.overwriteColor(color);
 
 	mc.draw(false);
@@ -409,7 +412,7 @@
 	    pt.steps.push(step);
 	  }
 	});
-        
+
         // Generate the mesh:
         mc = new LDR.MeshCollector(redrawObject, redrawObject, redrawObject);
         setMode(0); // 0 = normal, 1 = bfc, 2 = harlequin
@@ -419,8 +422,14 @@
 	elementCenter = new THREE.Vector3();
 	b.getCenter(elementCenter);
 	elementCenter = elementCenter.negate();
-        
+
 	baseObject.position.add(elementCenter);
+	// Perform rotation from !PREVIEW:
+	if(mainModel.preview) {
+	    let m4 = new THREE.Matrix4();
+	    m4.setFromMatrix3(mainModel.preview.r);
+	    baseObject.applyMatrix4(m4);
+	}
 	baseObject.updateMatrixWorld(true);
 	//baseObject.add(new THREE.Box3Helper(b, 0xff0000));
 	
@@ -433,7 +442,7 @@
 
 	let measurer = new LDR.Measurer(camera);
         let [dx,dy] = measurer.measure(b, baseObject.matrixWorld);
-	camera.zoom = 1.6*Math.min(window.innerWidth/dx, window.innerHeight*0.8/dy); // 1.6 to make the part not fill the full element. Use 2.0 to max it out.
+	camera.zoom = 1.2*Math.min(window.innerWidth/dx, window.innerHeight*0.8/dy); // 1.2 to make the part not fill the full element. Use 2.0 to max it out.
 	camera.far = 2*size;
 	
 	controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -441,13 +450,13 @@
 	window.addEventListener('resize', onWindowResize, false);
 	
         onWindowResize();
-        
+
 	// Build structure:
         let structureEle = document.getElementById('file_structure');
 	let onIconClick = () => {render();canvas.scrollIntoView();};
 	builder = new LDR.SubPartBuilder(mc, redrawObject, structureEle, showMarkerPoints, ldrLoader, mainModel, color, origo, inv, scene, size, onIconClick, 0, axesHelper);
         builder.drawTableIcons();
-        
+
 	$('#load_details').show();
 	$('#load_details').on('click', function() {
   	    $('#load_details').hide();
@@ -477,13 +486,13 @@
     
     let onError = function(obj) {
         if(obj.message)
-            showMessage('error', 'Error', obj.message, obj.line, obj.subModel.ID);
+            showMessage('error', 'Error', obj.message, obj.line, !obj.subModel?'':obj.subModel.ID);
 	else
 	    showMessage('error', 'Error!', obj);
     };
     
     let onWarning = function(obj) {
-        showMessage('warning', 'Warning', obj.message, obj.line, obj.subModel.ID);
+        showMessage('warning', 'Warning', obj.message, obj.line, !obj.subModel?'':obj.subModel.ID);
     };
     
     function showMessage(className, title, msg, line, subModel) {
@@ -512,7 +521,8 @@
 
     //ldrLoader.load('26604.dat');
     //ldrLoader.load('3024.dat');
-    ldrLoader.load('85080.dat');
+    //ldrLoader.load('85080.dat');
+    ldrLoader.load('3937d01.dat');
     //ldrLoader.load('sample_file.dat');
     //ldrLoader.load('4-4ering.dat');
     //ldrLoader.load('48/1-16chrd.dat');

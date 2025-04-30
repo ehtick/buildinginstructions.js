@@ -112,14 +112,20 @@ LDR.PLIBuilder.prototype.createClickMap = function(step) {
 	let pliID = key;
 
 	// Check if there is special PLI information for this part:
-	if(LDR.PLI && LDR.PLI.hasOwnProperty(pliID)) {
-	    let pliInfo = LDR.PLI[pliID];
+	if(partType.preview || LDR.PLI && LDR.PLI.hasOwnProperty(pliID)) {
 	    partID = "pli_" + partType.ID;
 	    if(!this.loader.partTypes.hasOwnProperty(partID)) {
-		let r = new THREE.Matrix3();
-		r.set(pliInfo[0], pliInfo[1], pliInfo[2],
-		      pliInfo[3], pliInfo[4], pliInfo[5],
-		      pliInfo[6], pliInfo[7], pliInfo[8]);
+		let r;
+		if(partType.preview) {
+		    r = partType.preview.r;
+		}
+		else {
+		    r = new THREE.Matrix3();
+		    let pliInfo = LDR.PLI[pliID];
+		    r.set(pliInfo[0], pliInfo[1], pliInfo[2],
+			  pliInfo[3], pliInfo[4], pliInfo[5],
+			  pliInfo[6], pliInfo[7], pliInfo[8]);
+		}
 		let step = new THREE.LDRStep();
 		step.addSubModel(new THREE.LDRPartDescription(16, new THREE.Vector3(), r,
 							      partType.ID, true, false));

@@ -191,6 +191,21 @@ THREE.LDRLoader.prototype.reportProgress = function(id) {
     }
 };
 
+THREE.LDRLoader.prototype.parseColor = function(colorID) {
+    if(colorID.length === 9 && colorID.substring(0, 3) === '0x2') {
+	// Direct color: https://www.ldraw.org/article/218.html
+	let hexValue = parseInt(colorID.substring(3), 16);
+	LDR.Colors[hexValue] = {name:'Direct color 0x2'+colorID, value:hexValue, edge:hexValue, direct:colorID};
+	return hexValue;
+    }
+    if(LDR.Colors[colorID] === undefined) {
+	// This color might be on the form "0x2995220", such as seen in 3626bps5.dat:
+	this.onWarning({message:'Unknown color "' + colorID + '". Black (0) will be shown instead.', line:i, subModel:part.ID});
+	return 0;
+    }
+    return parseInt(colorID);
+};
+
 /*
  * Primary parser for LDraw files.
  * 
@@ -247,7 +262,7 @@ THREE.LDRLoader.prototype.parse = function(data, defaultID) {
             lineType = parseInt(parts[0]);
         }
 
-	//console.log('Parsing line', i, 'of type', lineType, 'color', colorID, ':', line); // Useful if you encounter parse errors.
+	//console.log('Parsing line', i, 'of type', lineType, ':', line); // Useful if you encounter parse errors.
 
 	let is = type => (parts.length >= 3 && type === parts[1]);
 
@@ -262,22 +277,7 @@ THREE.LDRLoader.prototype.parse = function(data, defaultID) {
 
         let colorID;
 	if(lineType !== 0) {
-	    colorID = parts[1];
-	    if(colorID.length === 9 && colorID.substring(0, 3) === '0x2') {
-		// Direct color: https://www.ldraw.org/article/218.html
-		let hexValue = parseInt(colorID.substring(3), 16);
-		LDR.Colors[hexValue] = {name:'Direct color 0x2'+colorID, value:hexValue, edge:hexValue, direct:colorID};
-		colorID = hexValue;
-	    } 
-	    else if(LDR.Colors[colorID] === undefined) {
-		// This color might be on the form "0x2995220", such as seen in 3626bps5.dat:
-		
-		this.onWarning({message:'Unknown color "' + colorID + '". Black (0) will be shown instead.', line:i, subModel:part.ID});
-		colorID = 0;
-	    }
-	    else {
-		colorID = parseInt(colorID);
-	    }
+	    colorID = self.parseColor(parts[1]);
 	}
 
         // Expire texmapPlacement:
@@ -395,7 +395,7 @@ THREE.LDRLoader.prototype.parse = function(data, defaultID) {
                     localCull = false;
 		    break;
 		}
-		
+
 		// Handle CW/CCW:
 		if(parts[parts.length-1] === "CCW") {
                     part.CCW = CCW = true;
@@ -508,6 +508,19 @@ THREE.LDRLoader.prototype.parse = function(data, defaultID) {
 	    else if(LDR.LDCAD && LDR.LDCAD.handleCommentLine(part, parts)) {
                 saveThisCommentLine = false;
 	    }
+	    else if(is("!PREVIEW")) {
+		colorID = self.parseColor(parts[2]);
+		for(let j = 3; j < 15; j++) {
+		    parts[j] = parseFloat(parts[j]);
+		}
+		let position = new THREE.Vector3(parts[3], parts[4], parts[5]);
+		let rotation = new THREE.Matrix3();
+		rotation.set(parts[6],  parts[7],  parts[8],
+			     parts[9],  parts[10],  parts[11],
+			     parts[12], parts[13], parts[14]);
+		part.preview = new THREE.LDRPartDescription(colorID, position, rotation);
+		saveThisCommentLine = false;
+	    }
 	    else if(parts[1][0] === "!") {
 		if(is("!THEME") ||
 		   is("!HELP") ||
@@ -550,7 +563,7 @@ THREE.LDRLoader.prototype.parse = function(data, defaultID) {
             }
 	    let position = new THREE.Vector3(parts[2], parts[3], parts[4]);
 	    let rotation = new THREE.Matrix3();
-	    rotation.set(parts[5],  parts[6],  parts[7], 
+	    rotation.set(parts[5],  parts[6],  parts[7],
 			 parts[8],  parts[9],  parts[10], 
 			 parts[11], parts[12], parts[13]);
 	    let subModelID = parts.slice(14).join(" ").toLowerCase().replace('\\', '/');
@@ -1075,7 +1088,7 @@ THREE.LDRLoader.prototype.pack = function() {
   Part description: a part (ID) placed (position, rotation) with a
   given color (16/24 allowed) and invertCCW to allow for sub-parts in DAT-parts.
 */
-THREE.LDRPartDescription = function(colorID, position, rotation, ID, cull, invertCCW, tmp = null) {
+THREE.LDRPartDescription = function(colorID, position, rotation, ID = '', cull = false, invertCCW = false, tmp = null) {
     this.c = colorID; // LDraw ID. Negative values indicate edge colors - see top description.
     this.p = position; // Vector3
     this.r = rotation; // Matrix3
@@ -1962,14 +1975,26 @@ THREE.LDRPartType.prototype.setReferencedFrom = function(ldrLoader) {
 
 THREE.LDRPartType.prototype.canBePacked = function() {
     return (!this.inlined || (this.inlined === 'OFFICIAL')) && // Only pack official parts (not 'GENERATED' (from LDRGenerator) or 'IDB' (unpacked from IndexedDB).
-           this.isPart && // Should be a part.
-           this.license === 'Redistributable under CC BY 4.0 : see CAreadme.txt' &&
-	   this.ldraw_org && // And an LDRAW_ORG statement.
-           !this.ldraw_org.startsWith('Unofficial_'); // Double-check that it is official.
+        this.isPart && // Should be a part.
+        ['Redistributable under CCAL BY 4.0 : see CAreadme.txt', 'Licensed under CC BY 4.0 : see CAreadme.txt'].includes(this.license) &&
+	this.ldraw_org && // And an LDRAW_ORG statement.
+        !this.ldraw_org.startsWith('Unofficial_'); // Double-check that it is official.
 }
 
 THREE.LDRPartType.prototype.encodeHeader = function() {
     return (this.CCW ? 2 : 0) + (this.certifiedBFC ? 1 : 0);
+}
+
+THREE.LDRPartType.prototype.encodePreview = function() {
+    let p = this.preview;
+    let ret = [p.c, p.p.x, p.p.y, p.p.z];
+    let e = p.r.elements;
+    for(let x = 0; x < 3; x++) {
+        for(let y = 0; y < 3; y++) {
+            ret.push(e[x+y*3]);
+        }
+    }
+    return ret.join(' ');
 }
 
 THREE.LDRPartType.prototype.pack = function(loader) {
@@ -1986,6 +2011,9 @@ THREE.LDRPartType.prototype.pack = function(loader) {
     ret.md = this.modelDescription;
     ret.e = this.encodeHeader();
     ret.d = this.ldraw_org;
+    if(!!this.preview) {
+	ret.p = this.encodePreview();
+    }
 
     return ret;
 }
@@ -2005,6 +2033,17 @@ THREE.LDRPartType.prototype.unpack = function(obj) {
     this.inlined = 'IDB';
     this.isPart = true;
     this.ldraw_org = obj.d;
+    if(obj.p) {
+	let parts = obj.p.split(' ');
+	let colorID = parseInt(parts[0]);
+	parts = parts.slice(1).map((x) => parseFloat(x));
+	let position = new THREE.Vector3(parts[0], parts[1], parts[2]);
+	let rotation = new THREE.Matrix3();
+	rotation.set(parts[3],  parts[4],  parts[5],
+		     parts[6],  parts[7],  parts[8],
+		     parts[9], parts[10], parts[11]);
+	this.preview = new THREE.LDRPartDescription(colorID, position, rotation);
+    }
 }
 
 THREE.LDRLoader.prototype.purgePart = function(ID) {
