@@ -10,7 +10,7 @@
 
 LDR.Generator = {
     make: function(id) {
-        let sid = id.substring(0, id.length-4);
+        let sid = id.substring(0, id.length-4).replaceAll('\\','/');
 
 	// Traverse sid through path:
 	let params = [];
@@ -149,7 +149,7 @@ LDR.Generator = {
         let p1 = this.V(0, 1, 0);
         let r = this.R(1, 1);
 
-        let P = (M > 1 ? '48\\' : '')+N+'-'+D;
+        let P = (M > 1 ? '48/' : '')+N+'-'+D;
         s.asm(p0, r, P+'cyli');
         s.asm(p0, r, P+'edge');
         s.asm(p1, r, P+'edge');
@@ -166,7 +166,7 @@ LDR.Generator = {
         let p = this.V();
         let r = this.R(1, 1);
 
-        let P = (M > 1 ? '48\\' : '')+N+'-'+4;
+        let P = (M > 1 ? '48/' : '')+N+'-'+4;
         s.asm(p, r, P+'disc');
         s.asm(p, r, P+'cyli' + V);
         return pt;
@@ -187,7 +187,7 @@ LDR.Generator = {
         let [pt,S] = this.pT('Cylinder ' + this.f2s(N/D));
 
         let p0 = this.V(1, 0, 0), p1 = this.V(1, 1, 0);
-        let [c,s] = this.cs(1);
+        let [c,s] = this.cs(1, 8*M);
         let next0 = this.V(c, 0, s);
         let next1 = this.V(c, 1, s);
 
@@ -671,32 +671,32 @@ LDR.Generator = {
         R('tri4', () => X.tri(511, 3, 6, '2 Square Faces and 2 Triangular Faces'));
         // Circular line segments:
         R('?-?edge', (a,b) => X.ed(a,b));
-        R('48\\?-?edge', (a,b) => X.e48(a, b));
-        //R('48\\2-4edge', () => X.e48(2, 4)); // TODO Fix: Inconsistent slash in official LDraw file
-        //R('48\\4-4edge', () => X.e48(4, 4)); // TODO Fix: -||-
+        R('48/?-?edge', (a,b) => X.e48(a, b));
+        //R('48/2-4edge', () => X.e48(2, 4)); // TODO Fix: Inconsistent slash in official LDraw file
+        //R('48/4-4edge', () => X.e48(4, 4)); // TODO Fix: -||-
         // Cylinders with conditional lines:
         R('?-?cyli', (a,b) => X.cy(a, b));
         R('1-4cyli', () => X.cy(1, 4, 0)); // For some files the test points of conditional lines are at y=0 instead of y=1
         R('4-4cyli', () => X.cy(4, 4, 0)); // y=0
         R('7-8cyli', () => X.cy(7, 8, 1, 1)); // Special dist=1 to control points
         R('7-16cyli', () => X.cy(7, 16, 1, 1)); // Special dist=1 to control points
-        R('48\\?-?cyli', (a,b) => X.c48(a, b));
+        R('48/?-?cyli', (a,b) => X.c48(a, b));
         // Cylinders without conditional lines:
         R('?-?cyli2', (a,b) => X.cy2(a, b));
-        R('48\\?-?cyli2', (a,b) => X.cy2(a, b, 3));
+        R('48/?-?cyli2', (a,b) => X.cy2(a, b, 3));
         // Cylinders with open ends:
         R('?-?cylo', (a,b) => X.co(a, b));
-        R('48\\?-?cylo', (a,b) => X.co48(a, b));
+        R('48/?-?cylo', (a,b) => X.co48(a, b));
         // Cylinders with closed ends:
         R('?-4cylc', a => X.cc(a));
-        R('48\\?-4cylc', a => X.cc48(a));
+        R('48/?-4cylc', a => X.cc48(a));
 
         R('1-4cylc2', () => X.ccX(1, 1, 2, ' '));
         R('4-4cylc2', () => X.ccX(4));
-        R('48\\4-4cylc2', () => X.ccX(4, 3));
+        R('48/4-4cylc2', () => X.ccX(4, 3));
 
         R('?-4cylc3', a => X.ccX(a, 1, ''));
-        R('48\\4-4cylc3', a => X.ccX(a, 3, ''));
+        R('48/4-4cylc3', a => X.ccX(a, 3, ''));
 
         // TODO Cylinder truncated by an angled plane:
         R('1-4cyls', () => X.cylSloped(1, X.V(-1, 0, 1)));
@@ -712,11 +712,11 @@ LDR.Generator = {
 
         // Discs
         R('?-?disc', (a,b) => X.disc(a, b));
-        R('48\\?-?disc', (a,b) => X.d48(a, b));
+        R('48/?-?disc', (a,b) => X.d48(a, b));
 
         // Inverse of circular disc sectors:
         R('?-?ndis', (a,b) => X.nd(a, b));
-        R('48\\?-?ndis', (a,b) => X.n48(a, b));
+        R('48/?-?ndis', (a,b) => X.n48(a, b));
 
         // TODO Circular disc segment:
         R('1-16chrd', () => X.eAlias('Chord 0.0625'));
@@ -743,8 +743,8 @@ LDR.Generator = {
         R('?-?rin?', (a,b,c) => X.ri(a, b, c));
         R('ring?', a => X.alias('4-4ring'+a));
         R('ring10', () => X.alias('4-4rin10'));
-        R('48\\?-?rin?', (a,b,c) => X.r48(a, b, c));
-        R('48\\?-?ring?', (a,b,c) => X.r48(a, b, c));
+        R('48/?-?rin?', (a,b,c) => X.r48(a, b, c));
+        R('48/?-?ring?', (a,b,c) => X.r48(a, b, c));
 	R('?-?ri?', (a,b,c) => X.alias(a+'-'+b+'ring'+c));
 
         // Stud groups (TODO Duplo):
