@@ -115,12 +115,6 @@ LDR.Generator = {
         ret.set(0, 0, a, 0, b, 0, c, 0, 0);
         return ret;
     },
-    f2e: function(f) {
-        if(f === parseInt(f+''))
-            return f + '.0';
-	let s = f.toExponential(2);
-        return parseFloat(s);
-    },
     f2s: function(f, decimals = 4) {
         if(f === parseInt(f+''))
             return f + '.0';
@@ -197,7 +191,7 @@ LDR.Generator = {
 
         if(N < D) { // Add conditional line in beginning:
             if(y) {
-                S.addConditionalLine(24, p0, p1, next1, this.V(1, 1, -C)); // First tangest line at y=1 of length 0.4142
+                S.addConditionalLine(24, p0, p1, next1, this.V(1, 1, -C)); // First tangest line at y=1 of length C
             }
             else {
                 S.addConditionalLine(24, p0, p1, next0, this.V(1, 0, -1)); // First tangent line at y=0 of length 1
@@ -353,6 +347,24 @@ LDR.Generator = {
         return pt;
     },
     d48: function(N, D, descDecimals = 4) {let p = this.disc(N, D, 3, descDecimals); p.ldraw_org = '48_Primitive'; return p;},
+    discFromQuads: function(N, D, M = 1) {
+        let [pt,S] = this.pT((M > 1 ? 'Hi-Res ' : '') + 'Disc ' + this.f2s(N/D));
+        let zero = this.V(0, 0, 0);
+	let prevprev;
+        let prev = this.V(1, 0, 0);
+        for(let i = 1; i <= M*N*16/D; i++) {
+            let [c,s] = this.cs(i, 8*M);
+            let p = this.V(c, 0, s);
+	    if(i%2 === 0)
+		S.addQuad(16, zero, prevprev, prev, p);
+	    prevprev = prev;
+            prev = p;
+        }
+	if(D%N !== 0) // Could not be covered by quads:
+	    S.addTriangle(16, zero, prevprev, prev);
+        return pt;
+    },
+    dq48: function(N, D) {let p = this.discFromQuads(N, D, 3); p.ldraw_org = '48_Primitive'; return p;},
     nd: function(N, D, M = 1, descDecimals = 4) {
         let [pt,S] = this.pT((M > 1 ? 'Hi-Res ' : '') + 'Disc Negative ' + this.f2s(N/D, descDecimals));
         let X = [this.V(1, 0, 1), this.V(-1, 0, 1), this.V(-1, 0, -1), this.V(1, 0, -1)];
@@ -687,10 +699,20 @@ LDR.Generator = {
         R('7-8cyli', () => X.cy(7, 8, 1, 1)); // Inconsistent dist=1 to control points
         R('7-16cyli', () => X.cy(7, 16, 1, 1)); // Inconsistent dist=1 to control points
         R('48/?-?cyli', (a,b) => X.c48(a, b));
-        R('48/1-12cyli', () => X.c48(1, 12, 0.1305)); // Inconsistent dist to control points
-        R('48/1-16cyli', () => X.c48(1, 16, 0.1305)); // Inconsistent dist to control points!
-        R('48/1-48cyli', () => X.c48(1, 48, 0.4141, 5)); // Inconsistent number of decimals in description
-        R('48/5-48cyli', () => X.c48(5, 48, 0.4141, 5)); // Inconsistent number of decimals in description
+        R('48/1-12cyli', () => X.c48(1, 12, 0.1316)); // Inconsistent dist to control points
+        R('48/1-3cyli', () => X.c48(1, 3, 0.1305)); // Inconsistent dist to control points
+        R('48/1-4cyli', () => X.c48(1, 4, 0.1316)); // Inconsistent dist to control points
+        R('48/1-16cyli', () => X.c48(1, 16, 0.1317)); // Inconsistent dist to control points!
+        R('48/1-24cyli', () => X.c48(1, 24, 0.1317)); // Inconsistent dist to control points!
+        R('48/1-48cyli', () => X.c48(1, 48, 0.1305, 5)); // Inconsistent dist to control points. Inconsistent number of decimals in description
+	/*
+5 24 0.9914 0 0.1305 0.9914 1 0.1305 0.974411 1 0.25991 1 1 0
+5 24 0.9914 0 0.1305 0.9914 1 0.1305 0.9659   1 0.2588  1 1 0
+
+5 24 1 0 0 1 1 0 0.9914 1  0.1305 1      1 -0.1305
+5 24 1 0 0 1 1 0 0.9914 1 -0.1305 0.9914 1 0.1305	  
+	  */
+        R('48/5-48cyli', () => X.c48(5, 48, 0.1305, 5)); // Inconsistent dist to control points. Inconsistent number of decimals in description
         // Cylinders without conditional lines:
         R('?-?cyli2', (a,b) => X.cy2(a, b));
         R('48/?-?cyli2', (a,b) => X.cy2(a, b, 3));
@@ -725,7 +747,11 @@ LDR.Generator = {
         // Discs
         R('?-?disc', (a,b) => X.disc(a, b));
         R('48/?-?disc', (a,b) => X.d48(a, b));
+        R('48/1-4disc', (a,b) => X.dq48(1, 4)); // Built from quads instead of triangles
+        R('48/1-6disc', (a,b) => X.dq48(1, 6)); // Built from quads instead of triangles
+        R('48/1-8disc', (a,b) => X.dq48(1, 8)); // Built from quads instead of triangles
         R('48/5-48disc', (a,b) => X.d48(5, 48, 5)); // Inconsistent number of decimals in description
+        R('48/7-48disc', (a,b) => X.dq48(7, 48)); // Built from quads and triangles instead of just triangles
 
         // Inverse of circular disc sectors:
         R('?-?ndis', (a,b) => X.nd(a, b));
