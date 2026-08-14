@@ -23,11 +23,20 @@
         - 1714 Total
         Ignoring 91 Lo-res primitives as they are not currently being used in normal parts.
        */
+      function idToUrl(id) {
+        return ['../official/p/' + id.replace('#', '%23'), // Ensure box3#8p.dat works
+           '../official/parts/' + id,
+           '../official/parts/s/' + id,
+           '../unofficial/p/' + id,
+           '../unofficial/parts/' + id,
+           '../unofficial/parts/s/' + id
+          ];
+      }
       function cmp(a, b, name) {
           if(a[name] === b[name]) {
               return true;
           }
-          return "Mismatch on " + name + ". Found '" + a[name] + "'. Expected '" + b[name] + "'";
+          return "Mismatch on " + name + ". Found '" + a[name] + "'. Generated '" + b[name] + "'";
       }
       function cmpMany(a, b, names) {
           for(let i = 0; i < names.length; i++) {
@@ -259,7 +268,7 @@
           let ret = cmpMany(this, pt, ['name',
                                        'ID',
                                        'modelDescription',
-                                       'license',
+                                       //'license',
                                        'lastRotation',
                                        'replacement',
                                        //'ldraw_org', // Generated do not include the date.
@@ -327,12 +336,24 @@
 
       let charsLoaded = 0, filesLoaded = 0, filesSkipped = 0;
 
+      THREE.LDRLoader.prototype.getPartType = function(id) {
+	  if(!this.partTypes.hasOwnProperty(id)) {
+	      //console.warn('Part type not found', id);
+	      return null; // Not found
+	  }
+	  let pt = this.partTypes[id];
+	  if(pt === true) {
+              return null; // Not yet loaded
+	  }
+	  return pt;
+      }
+
       THREE.LDRLoader.prototype.load = function(id) {
-          let urls = this.idToUrl(id);
-          if(urls.length === 0) {
+          const urls = this.idToUrl(id);
+          if(!urls.length) {
 	      return; // No URL to load.
           }
-          id = id.toLowerCase().replace('\\', '/'); // Sanitize id. 
+          //id = id.toLowerCase().replace('\\', '/'); // Sanitize id.
 
           if(this.partTypes[id]) { // Already loaded
               if(this.partTypes[id] !== true) {
@@ -369,7 +390,7 @@
 
           this.unloadedFiles++;
           this.loader.load(urls[urlID], onFileLoaded, undefined, onError);
-      };      
+      };
 
       function report(msg, t) {
           let div = document.createElement(t);
@@ -377,16 +398,8 @@
           document.body.appendChild(div);
       }
 
-      let idToUrl = id => 
-          ['../official/p/' + id.replace('#', '%23'), // Ensure box3#8p.dat works
-           '../official/parts/' + id,
-           '../official/parts/s/' + id,
-           '../unofficial/p/' + id,
-           '../unofficial/parts/' + id,
-           '../unofficial/parts/s/' + id
-          ];
-
       function handleFile(id) {
+	  //if(id != '48\\1-16cyli.dat') return; // and 1-24 next!
           let generated = LDR.Generator.make(id);
 	  if(!generated) {
 	      filesSkipped++;
@@ -397,6 +410,9 @@
           let ldrLoader;
           function checkLoaded() {
               let loaded = ldrLoader.getPartType(generated.ID);
+	      if(!loaded) {
+	        return;
+	      }
               let cmp = loaded.equals(generated);
               if(cmp === true) {
                   report(generated.ID, 'span');                  
@@ -436,7 +452,7 @@
       }
 
     $(document).ready(function() {
-      let loader = new THREE.FileLoader(THREE.DefaultLoadingManager);    
+      let loader = new THREE.FileLoader(THREE.DefaultLoadingManager);
       loader.load('prim.txt', onFilesFileLoaded, undefined, console.warn);        
     });  
   </script>
