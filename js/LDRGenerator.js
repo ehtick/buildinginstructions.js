@@ -419,12 +419,13 @@ LDR.Generator = {
         return pt;
     },
     r48: function(N, D, size) {let p = this.ri(N, D, size, 3); p.ldraw_org = '48_Primitive'; return p;},
-    r48_4_4_9: function() {
-	let [pt,s] = this.pT('Hi-Res Ring  9 x 1.0');
-	s.asm(this.V0, this.R(1,1), '48/1-4ring9.dat');
-	s.asm(this.V0, this.R2(-1,1,1), '48/1-4ring9.dat');
-	s.asm(this.V0, this.R(-1,1), '48/1-4ring9.dat');
-	s.asm(this.V0, this.R2(1,1,-1), '48/1-4ring9.dat');
+    x48_4_4: function(smaller, title) {
+	let [pt,s] = this.pT('Hi-Res ' + title);
+	smaller = '48/1-4' + smaller + '.dat'
+	s.asm(this.V0, this.R(1,1), smaller);
+	s.asm(this.V0, this.R2(-1,1,1), smaller);
+	s.asm(this.V0, this.R(-1,1), smaller);
+	s.asm(this.V0, this.R2(1,1,-1), smaller);
 	return pt;
     },
     stug: function(X, Y, suffix = '', sub = 1) {
@@ -730,11 +731,13 @@ LDR.Generator = {
 
 5 24 1 0 0 1 1 0 0.9914 1  0.1305 1      1 -0.1305
 5 24 1 0 0 1 1 0 0.9914 1 -0.1305 0.9914 1 0.1305	  
-	  */
+	*/
+	R('48/4-4cyli', () => X.x48_4_4('cyli', 'Cylinder 1.0')); // Inconsistent primitive consisting of smaller primitives
         R('48/5-48cyli', () => X.c48(5, 48, 0.1305, 5)); // Inconsistent dist to control points. Inconsistent number of decimals in description
         // Cylinders without conditional lines:
         R('?-?cyli2', (a,b) => X.cy2(a, b));
         R('48/?-?cyli2', (a,b) => X.cy2(a, b, 3));
+	R('48/4-4cyli2', () => X.x48_4_4('cyli2', 'Cylinder 1.0 without Conditional Lines')); // Inconsistent primitive consisting of smaller primitives
         // Cylinders with open ends:
         R('?-?cylo', (a,b) => X.co(a, b));
         R('48/?-?cylo', (a,b) => X.co48(a, b));
@@ -804,7 +807,7 @@ LDR.Generator = {
         R('ring10', () => X.alias('4-4rin10'));
         R('48/?-?rin?', (a,b,c) => X.r48(a, b, c));
         R('48/?-?ring?', (a,b,c) => X.r48(a, b, c));
-        R('48/4-4ring9', () => X.r48_4_4_9());
+        R('48/4-4ring9', () => X.x48_4_4('ring9', 'Ring  9 x 1.0'));
 	R('?-?ri?', (a,b,c) => X.alias(a+'-'+b+'ring'+c));
 
         // Stud groups (TODO Duplo):
