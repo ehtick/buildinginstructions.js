@@ -419,6 +419,14 @@ LDR.Generator = {
         return pt;
     },
     r48: function(N, D, size) {let p = this.ri(N, D, size, 3); p.ldraw_org = '48_Primitive'; return p;},
+    r48_4_4_9: function() {
+	let [pt,s] = this.pT('Hi-Res Ring  9 x 1.0');
+	s.asm(this.V0, this.R(1,1), '48/1-4ring9.dat');
+	s.asm(this.V0, this.R2(-1,1,1), '48/1-4ring9.dat');
+	s.asm(this.V0, this.R(-1,1), '48/1-4ring9.dat');
+	s.asm(this.V0, this.R2(1,1,-1), '48/1-4ring9.dat');
+	return pt;
+    },
     stug: function(X, Y, suffix = '', sub = 1) {
         const NAMES = {'':'',
                        '2':'Open ',
@@ -796,6 +804,7 @@ LDR.Generator = {
         R('ring10', () => X.alias('4-4rin10'));
         R('48/?-?rin?', (a,b,c) => X.r48(a, b, c));
         R('48/?-?ring?', (a,b,c) => X.r48(a, b, c));
+        R('48/4-4ring9', () => X.r48_4_4_9());
 	R('?-?ri?', (a,b,c) => X.alias(a+'-'+b+'ring'+c));
 
         // Stud groups (TODO Duplo):
