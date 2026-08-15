@@ -121,6 +121,7 @@ LDR.Generator = {
         return parseFloat(f.toFixed(decimals));
     },
     V: (x,y,z) => new THREE.Vector3(x,y,z),
+    V0: new THREE.Vector3(),
     empty: function(id = 'Empty') {
         let [pt,ignore] = this.pT(id);
         pt.steps = [];
@@ -143,7 +144,7 @@ LDR.Generator = {
 
     co: function(N, D, M = 1, disc = false, descDecimals = 4) {
         let [pt,s] = this.pT((M > 1 ? 'Hi-Res ' : '') + 'Cylinder ' + (disc ? 'Closed' : 'Open') + ' ' + this.f2s(N/D, descDecimals));
-        let p0 = this.V();
+        let p0 = this.V0;
         let p1 = this.V(0, 1, 0);
         let r = this.R(1, 1);
 
@@ -161,7 +162,7 @@ LDR.Generator = {
     cc48: function(N) {let p = this.cc(N, 3); p.ldraw_org = '48_Primitive'; return p;},
     ccX: function(N, M = 1, V = 2, inconsistentDescription = false) {
         let [pt,s] = this.pT(inconsistentDescription ? inconsistentDescription : (M > 1 ? 'Hi-Res ' : '') + 'Cylinder Closed ' + this.f2s(N/4) + ' without ' + (V === 2 ? 'Edges and Conditional' : 'Top or Bottom Edge') + ' Lines');
-        let p = this.V();
+        let p = this.V0;
         let r = this.R(1, 1);
 
         let P = (M > 1 ? '48/' : '')+N+'-'+4;
@@ -181,6 +182,16 @@ LDR.Generator = {
         return pt;
     },
     e48: function(N, D, descDecimals = 4) {let p = this.ed(N, D, 3, descDecimals); p.ldraw_org = '48_Primitive'; return p;},
+    e48_N_4: function(N) {
+	let [pt,s] = this.pT('Hi-Res Circle ' + N/4);
+	s.asm(this.V0, this.R(1,1), '48/1-4edge.dat');
+	s.asm(this.V0, this.R2(-1,1,1), '48/1-4edge.dat');
+	if(N > 2) {
+	    s.asm(this.V0, this.R(-1,1), '48/1-4edge.dat');
+	    s.asm(this.V0, this.R2(1,1,-1), '48/1-4edge.dat');
+	}
+	return pt;
+    },
     cy: function(N, D, y = 1, C = 0.4141, M = 1, descDecimals = 4) { // y is for control points
         let [pt,S] = this.pT((M > 1 ? 'Hi-Res ' : '') + 'Cylinder ' + this.f2s(N/D, descDecimals));
 
@@ -336,7 +347,7 @@ LDR.Generator = {
     },
     disc: function(N, D, M = 1, descDecimals = 4) {
         let [pt,S] = this.pT((M > 1 ? 'Hi-Res ' : '') + 'Disc ' + this.f2s(N/D, descDecimals));
-        let zero = this.V(0, 0, 0);
+        let zero = this.V0;
         let prev = this.V(1, 0, 0);
         for(let i = 1; i <= M*N*16/D; i++) {
             let [c,s] = this.cs(i, 8*M);
@@ -349,7 +360,7 @@ LDR.Generator = {
     d48: function(N, D, descDecimals = 4) {let p = this.disc(N, D, 3, descDecimals); p.ldraw_org = '48_Primitive'; return p;},
     discFromQuads: function(N, D, M = 1) {
         let [pt,S] = this.pT((M > 1 ? 'Hi-Res ' : '') + 'Disc ' + this.f2s(N/D));
-        let zero = this.V(0, 0, 0);
+        let zero = this.V0;
 	let prevprev;
         let prev = this.V(1, 0, 0);
         for(let i = 1; i <= M*N*16/D; i++) {
@@ -690,8 +701,8 @@ LDR.Generator = {
         R('48/?-?edge', (a,b) => X.e48(a, b));
         R('48/1-48edge', () => X.e48(1, 48, 5)); // Inconsistent number of decimals in description
         R('48/5-48edge', () => X.e48(5, 48, 5)); // Inconsistent number of decimals in description
-        //R('48/2-4edge', () => X.e48(2, 4)); // TODO Fix: Inconsistent slash in official LDraw file
-        //R('48/4-4edge', () => X.e48(4, 4)); // TODO Fix: -||-
+        R('48/2-4edge', () => X.e48_N_4(2)); // Inconsistent structure of edge primitives
+        R('48/4-4edge', () => X.e48_N_4(4)); // Inconsistent structure of edge primitives
         // Cylinders with conditional lines:
         R('?-?cyli', (a,b) => X.cy(a, b));
         R('1-4cyli', () => X.cy(1, 4, 0)); // For some files the test points of conditional lines are at y=0 instead of y=1
@@ -865,7 +876,7 @@ THREE.LDRStep.prototype.aq = function(q) {
 }
 THREE.LDRStep.prototype.asm = function(p = null, r = null, id = '', c = 16, cull = true, ccw = false) {
     if(p === null) {
-        p = LDR.Generator.V(0, 0, 0);
+        p = LDR.Generator.V0;
     }
     if(r === null) {
         r = LDR.Generator.R(1, 1);
