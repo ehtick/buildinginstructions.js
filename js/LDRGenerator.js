@@ -184,11 +184,11 @@ LDR.Generator = {
     e48: function(N, D, descDecimals = 4) {let p = this.ed(N, D, 3, descDecimals); p.ldraw_org = '48_Primitive'; return p;},
     e48_N_4: function(N) {
 	let [pt,s] = this.pT('Hi-Res Circle ' + N/4);
-	s.asm(this.V0, this.R(1,1), '48/1-4edge.dat');
-	s.asm(this.V0, this.R2(-1,1,1), '48/1-4edge.dat');
+	s.asm(this.V0, this.R(1,1), '48/1-4edge');
+	s.asm(this.V0, this.R2(-1,1,1), '48/1-4edge');
 	if(N > 2) {
-	    s.asm(this.V0, this.R(-1,1), '48/1-4edge.dat');
-	    s.asm(this.V0, this.R2(1,1,-1), '48/1-4edge.dat');
+	    s.asm(this.V0, this.R(-1,1), '48/1-4edge');
+	    s.asm(this.V0, this.R2(1,1,-1), '48/1-4edge');
 	}
 	return pt;
     },
@@ -421,7 +421,7 @@ LDR.Generator = {
     r48: function(N, D, size) {let p = this.ri(N, D, size, 3); p.ldraw_org = '48_Primitive'; return p;},
     x48_4_4: function(smaller, title) {
 	let [pt,s] = this.pT('Hi-Res ' + title);
-	smaller = '48/1-4' + smaller + '.dat'
+	smaller = '48/1-4' + smaller;
 	s.asm(this.V0, this.R(1,1), smaller);
 	s.asm(this.V0, this.R2(-1,1,1), smaller);
 	s.asm(this.V0, this.R(-1,1), smaller);
@@ -752,7 +752,7 @@ LDR.Generator = {
         R('48/4-4cylc2', () => X.ccX(4, 3, 'Hi-Res Cylinder Closed 1.0 without Edges or Conditional Lines')); // Inconsistent 'or' vs 'and' in description
 
         R('?-4cylc3', a => X.ccX(a, 1, ''));
-        R('48/4-4cylc3', a => X.ccX(a, 3, ''));
+        R('48/4-4cylc3', () => X.ccX(4, 3, ''));
 
         // TODO Cylinder truncated by an angled plane:
         R('1-4cyls', () => X.cylSloped(1, X.V(-1, 0, 1)));
