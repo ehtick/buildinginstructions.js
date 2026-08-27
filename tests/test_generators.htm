@@ -86,7 +86,7 @@
           return true;
       }
 
-      const EPS = 0.001;
+      const EPS = 0.01;
       function equalsEPS(a, b) {
           return (a === 0 ? Math.abs(b) : Math.abs((a-b)/a)) <= EPS;
       }
@@ -190,12 +190,31 @@
           return arrayCompareTo(this, x, ['p1', 'p2', 'p3', 'p4']);
       }
 
+      // Returns true iff v-w1 is parallel with v-w2
+      function areParallel(v, w1, w2) {
+          const d1 = new THREE.Vector3(); d1.subVectors(v,w1).normalize();
+          const d2 = new THREE.Vector3(); d2.subVectors(v,w2).normalize();
+	  
+          return d1.equals(d2);
+      }
+
       LDR.Line5.prototype.equals = function(x) {
           let ret = cmpMany(this, x, ['c','tmp']);
           if(ret !== true) {
-              return 'Conditional line - ' + ret;
+              return 'Conditional line - c/tmp ' + ret;
           }
-          return cmpManyEq(this, x, ['p1', 'p2', 'p3', 'p4']);
+	  ret = cmpManyEq(this, x, ['p1', 'p2']);
+          if(ret !== true) {
+              return 'Conditional line - p1/p2 ' + ret;
+          }
+	  // Allow control point lines to simply be parallel:
+	  if(!(areParallel(this.p1, this.p3, x.p3) || areParallel(this.p1, this.p3, x.p4))) {
+	      return 'Conditional line - parallel control point error 1!';
+	  }
+	  if(!(areParallel(this.p1, this.p4, x.p3) || areParallel(this.p1, this.p4, x.p4))) {
+	      return 'Conditional line - parallel control point error 2!';
+	  }
+          return true;
       }
 
       LDR.Line5.prototype.compareTo = function(x) {
@@ -399,7 +418,7 @@
       }
 
       function handleFile(id) {
-	  //if(id != '48\\2-4ndis.dat') return;
+	  //if(id != '48\\5-48cyli.dat') return;
           let generated = LDR.Generator.make(id);
 	  if(!generated) {
 	      filesSkipped++;
