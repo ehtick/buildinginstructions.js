@@ -733,7 +733,7 @@ LDR.Generator = {
 
         R('1-4cylc2', () => X.ccX(1, 1, 2, 'Cylinder Closed  0.25 without Edges and Conditional Lines')); // Inconsistent spacing in description
         R('4-4cylc2', () => X.ccX(4));
-        R('48/4-4cylc2', () => X.ccX(4, 3, 'Hi-Res Cylinder Closed 1.0 without Edges or Conditional Lines')); // Inconsistent 'or' vs 'and' in description
+        R('48/4-4cylc2', () => X.ccX(4, 3, 2, 'Hi-Res Cylinder Closed 1.0 without Edges or Conditional Lines')); // Inconsistent 'or' vs 'and' in description
 
         R('?-4cylc3', a => X.ccX(a, 1, ''));
         R('48/4-4cylc3', () => X.ccX(4, 3, ''));
