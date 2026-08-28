@@ -381,7 +381,7 @@ LDR.Generator = {
         for(let i = 1; i <= M*N*16/D; i++) {
             let [c,s] = this.cs(i, 8*M);
             let p = this.V(c, 0, s);
-            S.addTriangle(16, X[parseInt((i-1)/(M === 1 ? 4 : 16))], p, prev);
+            S.addTriangle(16, X[parseInt((i-1)/(4*M))], p, prev);
             prev = p;
         }
         return pt;
@@ -401,8 +401,8 @@ LDR.Generator = {
         }
         return pt;
     },
-    ri: function(N, D, size, M = 1, ERROR_NAME = false) {
-        let [pt,S] = this.pT(ERROR_NAME ? ERROR_NAME : (M > 1 ? 'Hi-Res ' : '') + 'Ring ' + this.pad2(size) + ' x ' + this.f2s(1.0/D*N));
+    ri: function(N, D, size, M = 1, ERROR_NAME = false, obsolete=false) {
+        let [pt,S] = this.pT(ERROR_NAME ? ERROR_NAME : (obsolete?'~':'') + (M > 1 ? 'Hi-Res ' : '') + 'Ring ' + this.pad2(size) + ' x ' + this.f2s(1.0/D*N) + (obsolete?' (Obsolete)':''));
         let SIZE = size+1;
         let prev1 = this.V(size, 0, 0);
         let prev2 = this.V(SIZE, 0, 0);
@@ -416,7 +416,7 @@ LDR.Generator = {
         }
         return pt;
     },
-    r48: function(N, D, size) {let p = this.ri(N, D, size, 3); p.ldraw_org = '48_Primitive'; return p;},
+    r48: function(N, D, size, obsolete=false) {let p = this.ri(N, D, size, 3, false, obsolete); p.ldraw_org = '48_Primitive'; return p;},
     x48_4_4: function(smaller, title) {
 	let [pt,s] = this.pT('Hi-Res ' + title);
 	smaller = '48/1-4' + smaller;
@@ -790,6 +790,9 @@ LDR.Generator = {
         R('ring?', a => X.alias('4-4ring'+a));
         R('ring10', () => X.alias('4-4rin10'));
         R('48/?-?rin?', (a,b,c) => X.r48(a, b, c));
+        R('48/3-4rin?', (a) => X.r48(3, 4, a, true));
+        R('48/4-4rin?', (a) => X.r48(4, 4, a, true));
+        R('48/5-6rin16', (a) => X.r48(5, 6, 16, true));
         R('48/?-?ring?', (a,b,c) => X.r48(a, b, c));
         R('48/4-4ring9', () => X.x48_4_4('ring9', 'Ring  9 x 1.0'));
 	R('?-?ri?', (a,b,c) => X.alias(a+'-'+b+'ring'+c));
